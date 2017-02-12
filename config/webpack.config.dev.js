@@ -1,4 +1,5 @@
 var autoprefixer = require('autoprefixer');
+var precss = require('precss');
 var webpack = require('webpack');
 var HtmlWebpackPlugin = require('html-webpack-plugin');
 var CaseSensitivePathsPlugin = require('case-sensitive-paths-webpack-plugin');
@@ -134,7 +135,7 @@ module.exports = {
       // in development "style" loader enables hot editing of CSS.
       {
         test: /\.(css|less)$/,
-          loader: 'style!css?importLoaders=1!postcss!less'
+          loader: 'style!css!less'
 
       },
       // JSON is not enabled by default in Webpack but both Node and Browserify
@@ -158,7 +159,7 @@ module.exports = {
   
   // We use PostCSS for autoprefixing only.
   postcss: function() {
-    return [
+    return [precss,
       autoprefixer({
         browsers: [
           '>1%',
