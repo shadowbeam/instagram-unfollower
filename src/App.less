@@ -1,3 +1,4 @@
+@import (reference) './index.less';
 
 .App {
   text-align: center;
@@ -5,6 +6,23 @@
 
 .App-intro {
   font-size: large;
+}
+
+.bg{
+	position: absolute;
+	width: 50%;
+	height: 100%;
+	z-index: -1;
+}
+
+
+.bg.right{
+	background-color: @light-grey;
+	right:0;
+}
+
+.bg.left{
+	background-color: @primary;
 }
 
 @keyframes App-logo-spin {

@@ -1,16 +1,18 @@
 import React, { Component } from 'react';
 import Header from './header/Header.js';
+import Social from './social/Social.js';
 import './App.less';
 
 class App extends Component {
   render() {
     return (
-      <div className="App">
+      <div className='App'>
+
+        <div className='bg right'></div>
+        <div className='bg left'></div>
        
        <Header></Header>
-        <p className="App-intro">
-          To get started, edit <code>src/App.js</code> and save to reload.
-        </p>
+       <Social></Social>
       </div>
     );
   }
