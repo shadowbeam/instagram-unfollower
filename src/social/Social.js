@@ -3,13 +3,15 @@ import './social.less';
 
 class Social extends React.Component {
 
+	public social = ['github', 'linkedin'];
+
+
 	  constructor(props : ITodoItemProps){
     super(props);
     this.state = { editText: this.props.todo.title };
   }
 
 
-	const social = ['github', 'linkedin'];
 
     return (
         <div className='social'>
@@ -17,7 +19,7 @@ class Social extends React.Component {
         <SocialItem key={number.toString()} value={number} />
       )}
 
-        	
+
         </div>
     );
   }
