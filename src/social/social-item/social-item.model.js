@@ -1,4 +1,4 @@
-class SocialItem {
+export default class SocialItem {
 
     icon: string;
     url: string;

@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import Header from './header/Header.js';
-import Social from './social/Social.js';
+import Social from './social/social.js';
 import './App.less';
 
 class App extends Component {
