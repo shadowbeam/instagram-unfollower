@@ -12,6 +12,8 @@ class App extends Component {
         <div className='bg left'></div>
 
        <Header></Header>
+       <Social></Social>
+
       </div>
     );
   }

@@ -1,7 +1,17 @@
-// import React, { Component } from 'react';
-// import './social.less';
-//
-// class Social extends React.Component {
+import React, { Component } from 'react';
+import './social.less';
+
+
+class Social extends Component {
+  render() {
+    return <h1>Hello</h1>;
+  }
+}
+
+export default Social;
+
+
+// class Social extends Component {
 //
 // 	// const social = ['github', 'linkedin'];
 //
