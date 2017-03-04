@@ -13,8 +13,6 @@ export default class SocialItem extends Component {
     this.socialItem = props.value;
     this.enableHover = this.enableHover.bind(this);
     this.disableHover = this.disableHover.bind(this);
-
-
   }
 
   enableHover(){

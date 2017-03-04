@@ -4,7 +4,7 @@ import SocialItemComponent from './social-item/social-item.js';
 import SocialItem from './social-item/social-item.model.js';
 
 
-class Social extends Component {
+export default class Social extends Component {
 
   social = [
     new SocialItem("linkedin", "https://www.linkedin.com/profile/view?id=52957269", "#0077b5"),
@@ -23,11 +23,8 @@ class Social extends Component {
 
   render() {
     return (
-        <div className='social-items'>
-  	      {this.social.map((socialItem) =>
-            <SocialItemComponent value={socialItem} />)}
-        </div>
+        <div className='social-items'>{
+          this.social.map((socialItem) => <SocialItemComponent value={socialItem} />)
+          }</div>
       )}
 }
-
-export default Social;

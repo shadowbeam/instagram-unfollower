@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
-import Header from './header/Header.js';
+import Header from './header/header.js';
 import Social from './social/social.js';
+import Stats from './stats/stats.js';
 import './App.less';
 
 class App extends Component {
@@ -12,6 +13,7 @@ class App extends Component {
         <div className='bg left'></div>
 
        <Header></Header>
+       <Stats></Stats>
        <Social></Social>
 
       </div>
