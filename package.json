@@ -5,11 +5,16 @@
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "serve": "light-server -c light-server.config.json"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "express": "^4.15.4"
+    "express": "^4.15.4",
+    "node-fetch": "^1.7.2"
+  },
+  "devDependencies": {
+    "light-server": "^2.2.1"
   }
 }
