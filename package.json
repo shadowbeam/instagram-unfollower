@@ -1,20 +1,22 @@
 {
-  "name": "instagram",
+  "name": "instagram-unfollower",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js",
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "serve": "light-server -c light-server.config.json"
+    "start": "npm run build:live",
+    "build:live": "nodemon --exec ./node_modules/.bin/ts-node -- ./src/index.ts"
   },
-  "author": "",
+  "author": "allanwatson",
   "license": "ISC",
   "dependencies": {
     "express": "^4.15.4",
     "node-fetch": "^1.7.2"
   },
   "devDependencies": {
-    "light-server": "^2.2.1"
+    "@types/node": "^8.0.25",
+    "nodemon": "^1.11.0",
+    "ts-node": "^3.3.0",
+    "typescript": "^2.4.2"
   }
 }
