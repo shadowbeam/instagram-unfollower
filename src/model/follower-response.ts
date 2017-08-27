@@ -11,10 +11,7 @@ export interface InnerNode {
     id: string;
     username: string;
     full_name: string;
-    // profile_pic_url: string;
-    // is_verified: string;
-    // followed_by_viewer: string;
-    // requested_by_viewer: string;}
+
 }
 
 export interface Node {

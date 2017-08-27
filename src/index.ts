@@ -1,8 +1,21 @@
 import {Followers} from "./service/followers.service";
 import {LoginService} from "./service/login.service";
 
-let loginService = new LoginService();
+export class Index {
 
-// let followers = new Followers('3407383', 10, loginService);
+    loginService: LoginService;
+    followers: Followers;
 
-// followers.fetchFollowers();
+    constructor() {
+        this.loginService = new LoginService(this.loggedIn);
+        this.followers = new Followers('3407383', 1000, this.loginService);
+    }
+
+    loggedIn = (): void => {
+        console.log('Calling followers');
+        this.followers.fetchFollowers();
+    }
+
+}
+
+let index = new Index();

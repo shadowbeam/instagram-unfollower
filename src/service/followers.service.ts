@@ -1,7 +1,9 @@
 import fetch from "node-fetch";
 import {FollowerRequest} from "../model/follower-request";
 import {FollowerResponse, Node} from "../model/follower-response";
+import {Following} from "../model/following";
 import {LoginService} from "./login.service";
+import * as fs from 'fs';
 
 export class Followers {
 
@@ -10,10 +12,21 @@ export class Followers {
     followerRequest: FollowerRequest;
     loginService: LoginService
 
+    logger: any;
+
+    following: Following[];
+
     constructor(userId: string, batchSize: number, loginService: LoginService) {
         this.loginService = loginService;
         this.followerRequest = new FollowerRequest(userId, batchSize);
-        console.log(`${this.urlBase}?query_id=${this.queryId}&variables=${JSON.stringify(this.followerRequest)}`);
+        this.following = [];
+
+        fs.truncate('followers.txt', 0, function() {
+
+        });
+        this.logger = fs.createWriteStream('followers.txt', {
+            flags: 'a'
+        })
     }
 
     public fetchFollowers(): void {
@@ -33,10 +46,10 @@ export class Followers {
                 'X-Instagram-AJAX': '1',
                 'X-Requested-With': 'XMLHttpRequest',
                 'X-CSRFToken': this.loginService.getCsrfToken(),
-                'cookie': 'ig_pr=2; ig_vw=845'
+                'cookie': `csrftoken=${this.loginService.getCsrfToken()}; sessionid=${this.loginService.getSesionId()}`
+
             },
         }).then(function(res) {
-            console.log("Response from followers: " + res.status);
             return res.json();
         }).then(this.success)
             .catch(err => console.error("Error occurred " + err));
@@ -48,16 +61,34 @@ export class Followers {
         let response: FollowerResponse = res.data.user.edge_follow;
 
         for (let node of response.edges) {
-            console.log(`${node.node.id}\t-\t${node.node.username}\t-\t${node.node.full_name}`);
+            this.following.push(new Following(node.node.id, node.node.username, node.node.full_name));
         }
 
-        // if (response.page_info.has_next_page) {
-        //     this.followerRequest.setAfter(response.page_info.end_cursor);
-        //     this.fetchFollowers();
-        // }
-
+        if (response.page_info.has_next_page) {
+            console.log(`Found so far ${this.following.length}`);
+            this.followerRequest.setAfter(response.page_info.end_cursor);
+            this.fetchFollowers();
+        } else {
+            this.analyzeFollowers();
+        }
     }
 
+    analyzeFollowers = (): void => {
+        console.log(`Found ${this.following.length} followers now writing to disk...`)
 
+        this.logger.write('[\n');
+
+        for (let i = 0; i < this.following.length; i++) {
+            let following = this.following[i];
+            console.log(`${following.id}\t-\t${following.username}\t-\t${following.full_name}`);
+            this.logger.write(JSON.stringify(following));
+            if (i != this.following.length - 1) {
+                this.logger.write(',\n');
+            }
+        }
+        this.logger.write(']');
+        console.log(`${this.following.length} followers written to followers.txt`)
+
+    }
 
 }

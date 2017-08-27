@@ -15,10 +15,12 @@ export class LoginService {
 
     loginDetails: LoginRequest;
 
-    constructor() {
+    callback: () => void;
+
+    constructor(callback: () => void) {
+        this.callback = callback;
         fs.readFile('insta.tokens', this.readInstaTokens);
     }
-
 
     readInstaTokens = (err, data): void => {
         if (!err) {
@@ -26,7 +28,11 @@ export class LoginService {
             let lines = data.toString().split(this.DELIMITER);
             this.csrfToken = lines[0];
             this.sessionId = lines[1];
-            console.log(`Found csrfToken: ${this.csrfToken} and sessionId: ${this.sessionId}`)
+            console.log(`Found csrfToken: ${this.csrfToken}`);
+            console.log(`Found sessionId: ${this.sessionId}`);
+
+            this.callback();
+
         } else {
             console.log("Please provide your Instagram authentication details:");
 
@@ -107,11 +113,11 @@ export class LoginService {
             .catch(err => console.error(err));
     }
 
-    getCsrfToken(): string {
+    public getCsrfToken(): string {
         return this.csrfToken;
     }
 
-    getSesionId(): string {
+    public getSesionId(): string {
         return this.sessionId;
     }
 
@@ -124,7 +130,7 @@ export class LoginService {
 
             for (let cookie of cookies) {
                 if (cookie.includes("sessionid")) {
-                    let regex: any = /sessionid=(\w*)/;
+                    let regex: any = /sessionid=([^=]*);/;
                     this.sessionId = regex.exec(cookie)[1];
                 }
             }
