@@ -1,6 +1,7 @@
 import fetch from "node-fetch";
 import formData from "form-data";
 import {LoginRequest} from "../model/login-request";
+import * as fs from 'fs';
 
 export class LoginService {
 
@@ -9,11 +10,25 @@ export class LoginService {
     sessionId: string = '';
     userAgent = 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/48.0.2564.103 Safari/537.36';
 
+    DELIMITER: string = " - ";
+
     loginDetails: LoginRequest;
 
     constructor() {
+        fs.readFile('insta.tokens', this.readInstaTokens);
         this.loginDetails = new LoginRequest('allan.watsonn', '');
-        this.makeInitialRequest();
+    }
+
+    readInstaTokens = (err, data): void => {
+        if (!err) {
+            console.log("Reading in csrfToken and sessionId...");
+            let lines = data.toString().split(this.DELIMITER);
+            this.csrfToken = lines[0];
+            this.sessionId = lines[1];
+            console.log(`Found csrfToken: ${this.csrfToken} and sessionId: ${this.sessionId}`)
+        } else {
+            this.makeInitialRequest();
+        }
     }
 
     makeInitialRequest(): void {
@@ -78,20 +93,32 @@ export class LoginService {
     }
 
     success = (res: any): void => {
-        console.log("Login succesful");
 
-        let cookies = res.headers.getAll('set-cookie');
+        if (res.status == "200") {
+            console.log("Login succesful");
 
-        for (let cookie of cookies) {
-            if (cookie.includes("sessionid")) {
-                let regex: any = /sessionid=(\w*)/;
-                this.sessionId = regex.exec(cookie)[1];
+            let cookies = res.headers.getAll('set-cookie');
+
+            for (let cookie of cookies) {
+                if (cookie.includes("sessionid")) {
+                    let regex: any = /sessionid=(\w*)/;
+                    this.sessionId = regex.exec(cookie)[1];
+                }
             }
+
+            console.log("Fetched new sessionId: " + this.sessionId);
+
+            fs.writeFile('insta.tokens', this.csrfToken + this.DELIMITER + this.sessionId, function(err) {
+                if (err) {
+                    console.log("Could not write to disk. Check folder permissions");
+                    return console.error(err);
+                }
+                console.log("Stored tokens");
+            });
+
+        } else {
+            console.log("Unsuccesful login: " + res.status)
         }
-
-        console.log("Fetched new sessionId: " + this.sessionId);
-
-
 
     }
 
