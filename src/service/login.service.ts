@@ -2,6 +2,7 @@ import fetch from "node-fetch";
 import formData from "form-data";
 import {LoginRequest} from "../model/login-request";
 import * as fs from 'fs';
+import * as inquirer from 'inquirer';
 
 export class LoginService {
 
@@ -16,8 +17,8 @@ export class LoginService {
 
     constructor() {
         fs.readFile('insta.tokens', this.readInstaTokens);
-        this.loginDetails = new LoginRequest('allan.watsonn', '');
     }
+
 
     readInstaTokens = (err, data): void => {
         if (!err) {
@@ -27,8 +28,30 @@ export class LoginService {
             this.sessionId = lines[1];
             console.log(`Found csrfToken: ${this.csrfToken} and sessionId: ${this.sessionId}`)
         } else {
-            this.makeInitialRequest();
+            console.log("Please provide your Instagram authentication details:");
+
+            inquirer.prompt([
+                {
+                    type: 'username',
+                    message: 'Enter a username',
+                    name: 'username'
+                },
+                {
+                    type: 'password',
+                    message: 'Enter a masked password',
+                    name: 'password',
+                    mask: '*'
+                }
+            ]).then(this.promptCallback);
+
+
         }
+    }
+
+    promptCallback = (answers): void => {
+        console.log(answers.username + answers.password);
+        this.loginDetails = new LoginRequest(answers.username, answers.password);
+        this.makeInitialRequest();
     }
 
     makeInitialRequest(): void {
@@ -58,7 +81,7 @@ export class LoginService {
     }
 
     login(): void {
-        console.log("Logging in");
+        console.log("Logging in...");
 
         fetch(this.url_login, {
             method: 'POST',
@@ -106,7 +129,7 @@ export class LoginService {
                 }
             }
 
-            console.log("Fetched new sessionId: " + this.sessionId);
+            console.log("Found new sessionId: " + this.sessionId);
 
             fs.writeFile('insta.tokens', this.csrfToken + this.DELIMITER + this.sessionId, function(err) {
                 if (err) {

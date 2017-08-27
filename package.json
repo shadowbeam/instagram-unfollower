@@ -11,7 +11,9 @@
   "license": "ISC",
   "dependencies": {
     "express": "^4.15.4",
-    "node-fetch": "^1.7.2"
+    "inquirer": "^3.2.2",
+    "node-fetch": "^1.7.2",
+    "prompt": "^1.0.0"
   },
   "devDependencies": {
     "@types/fs-ext": "0.0.29",
