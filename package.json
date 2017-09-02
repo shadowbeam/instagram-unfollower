@@ -10,6 +10,7 @@
   "author": "allanwatson",
   "license": "ISC",
   "dependencies": {
+    "colors": "^1.1.2",
     "express": "^4.15.4",
     "inquirer": "^3.2.2",
     "line-by-line": "^0.1.5",
