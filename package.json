@@ -12,8 +12,9 @@
   "dependencies": {
     "express": "^4.15.4",
     "inquirer": "^3.2.2",
+    "line-by-line": "^0.1.5",
     "node-fetch": "^1.7.2"
-    },
+  },
   "devDependencies": {
     "@types/fs-ext": "0.0.29",
     "@types/node": "^8.0.25",

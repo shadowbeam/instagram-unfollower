@@ -3,6 +3,8 @@ import {FollowerRequest} from "../model/follower-request";
 import {FollowerResponse, Node} from "../model/follower-response";
 import {Following} from "../model/following";
 import {LoginService} from "./login.service";
+import * as inquirer from 'inquirer';
+
 import * as fs from 'fs';
 
 export class Followers {
@@ -11,26 +13,73 @@ export class Followers {
     queryId: string = '17874545323001329';
     followerRequest: FollowerRequest;
     loginService: LoginService
+    batchSize: number;
 
     logger: any;
 
     following: Following[];
 
-    constructor(userId: string, batchSize: number, loginService: LoginService) {
+    callback: () => void;
+
+    constructor(batchSize: number, loginService: LoginService, callback: () => void) {
         this.loginService = loginService;
-        this.followerRequest = new FollowerRequest(userId, batchSize);
+        this.batchSize = batchSize;
         this.following = [];
+        this.callback = callback;
 
-        fs.truncate('followers.txt', 0, function() {
 
-        });
-        this.logger = fs.createWriteStream('followers.txt', {
-            flags: 'a'
-        })
+
     }
 
     public fetchFollowers(): void {
+
+        fs.exists("followers.txt", this.fileExists);
+
+    }
+
+    fileExists = (exists: boolean): void => {
+
+        if (!exists) {
+
+            fs.truncate('followers.txt', 0, function() {
+
+            });
+
+            this.logger = fs.createWriteStream('followers.txt', {
+                flags: 'a'
+            })
+            this.fetchBatchOfFollowers();
+        } else {
+            console.log("Found a list of followers");
+            inquirer.prompt([
+                {
+                    type: 'confirm',
+                    default: true,
+                    name: 'response',
+                    message: 'Do you want to unfollow everyone on this list?'
+                }
+            ]).then(this.promptCallback);
+
+        }
+    }
+
+
+    promptCallback = (confirm: any): void => {
+
+        if (confirm.response) {
+            this.callback();
+        }
+        else {
+            console.log("Ok I won't unfollow them");
+        }
+    }
+
+    fetchBatchOfFollowers = (): void => {
         console.log("fetching followers...");
+        if (!this.followerRequest) {
+            this.followerRequest = new FollowerRequest(this.loginService.getUserId(), this.batchSize);
+        }
+
         fetch(`${this.urlBase}?query_id=${this.queryId}&variables=${JSON.stringify(this.followerRequest)}`, {
             method: 'GET',
             headers: {
@@ -42,7 +91,7 @@ export class Followers {
                 'Origin': 'https://www.instagram.com',
                 'Referer': 'https://www.instagram.com/',
                 'User-Agent': ('Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 \
-        (KHTML, like Gecko) Chrome/48.0.2564.103 Safari/537.36'),
+      (KHTML, like Gecko) Chrome/48.0.2564.103 Safari/537.36'),
                 'X-Instagram-AJAX': '1',
                 'X-Requested-With': 'XMLHttpRequest',
                 'X-CSRFToken': this.loginService.getCsrfToken(),
@@ -53,8 +102,8 @@ export class Followers {
             return res.json();
         }).then(this.success)
             .catch(err => console.error("Error occurred " + err));
-
     }
+
 
 
     success = (res: any): void => {
@@ -67,7 +116,7 @@ export class Followers {
         if (response.page_info.has_next_page) {
             console.log(`Found so far ${this.following.length}`);
             this.followerRequest.setAfter(response.page_info.end_cursor);
-            this.fetchFollowers();
+            this.fetchBatchOfFollowers();
         } else {
             this.analyzeFollowers();
         }
@@ -88,6 +137,9 @@ export class Followers {
         }
         this.logger.write(']');
         console.log(`${this.following.length} followers written to followers.txt`)
+        console.log('\x1b[35m', 'Please remove the lines from followers.txt that you do not want to unfollow before continuing...');
+
+        this.callback();
 
     }
 

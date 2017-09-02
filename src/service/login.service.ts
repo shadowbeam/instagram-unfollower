@@ -8,6 +8,7 @@ export class LoginService {
 
     url_login: string = 'https://www.instagram.com/accounts/login/ajax/';
     csrfToken: string = '';
+    userId: string = '';
     sessionId: string = '';
     userAgent = 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/48.0.2564.103 Safari/537.36';
 
@@ -26,8 +27,9 @@ export class LoginService {
         if (!err) {
             console.log("Reading in csrfToken and sessionId...");
             let lines = data.toString().split(this.DELIMITER);
-            this.csrfToken = lines[0];
-            this.sessionId = lines[1];
+            this.userId = lines[0];
+            this.csrfToken = lines[1];
+            this.sessionId = lines[2];
             console.log(`Found csrfToken: ${this.csrfToken}`);
             console.log(`Found sessionId: ${this.sessionId}`);
 
@@ -121,6 +123,10 @@ export class LoginService {
         return this.sessionId;
     }
 
+    public getUserId(): string {
+        return this.userId;
+    }
+
     success = (res: any): void => {
 
         if (res.status == "200") {
@@ -132,12 +138,16 @@ export class LoginService {
                 if (cookie.includes("sessionid")) {
                     let regex: any = /sessionid=([^=]*);/;
                     this.sessionId = regex.exec(cookie)[1];
+                } else if (cookie.includes("ds_user_id")) {
+                    let regex: any = /ds_user_id=(\w*)/;
+                    this.userId = regex.exec(cookie)[1];
                 }
             }
 
             console.log("Found new sessionId: " + this.sessionId);
+            console.log("Found new userId: " + this.userId);
 
-            fs.writeFile('insta.tokens', this.csrfToken + this.DELIMITER + this.sessionId, function(err) {
+            fs.writeFile('insta.tokens', this.userId + this.DELIMITER + this.csrfToken + this.DELIMITER + this.sessionId, function(err) {
                 if (err) {
                     console.log("Could not write to disk. Check folder permissions");
                     return console.error(err);
