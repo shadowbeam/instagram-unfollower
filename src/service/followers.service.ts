@@ -2,8 +2,8 @@ import fetch from "node-fetch";
 import {FollowerRequest} from "../model/follower-request";
 import {FollowerResponse, Node} from "../model/follower-response";
 import {Following} from "../model/following";
-import {LoginService} from "./login.service";
 import * as inquirer from 'inquirer';
+import {InstaClient} from "../client/insta-client";
 
 import * as fs from 'fs';
 
@@ -12,39 +12,26 @@ export class Followers {
     urlBase: string = 'https://www.instagram.com/graphql/query/';
     queryId: string = '17874545323001329';
     followerRequest: FollowerRequest;
-    loginService: LoginService
-    batchSize: number;
-
+    instaClient: InstaClient
     logger: any;
-
     following: Following[];
-
     callback: () => void;
 
-    constructor(batchSize: number, loginService: LoginService, callback: () => void) {
-        this.loginService = loginService;
-        this.batchSize = batchSize;
+    constructor(batchSize: number, instaClient: InstaClient, callback: () => void) {
+        this.instaClient = instaClient;
         this.following = [];
         this.callback = callback;
-
-
+        this.followerRequest = new FollowerRequest(this.instaClient.getUserId(), batchSize);
 
     }
 
     public fetchFollowers(): void {
-
         fs.exists("followers.txt", this.fileExists);
-
     }
 
     fileExists = (exists: boolean): void => {
 
         if (!exists) {
-
-            fs.truncate('followers.txt', 0, function() {
-
-            });
-
             this.logger = fs.createWriteStream('followers.txt', {
                 flags: 'a'
             })
@@ -76,37 +63,14 @@ export class Followers {
 
     fetchBatchOfFollowers = (): void => {
         console.log("fetching followers...");
-        if (!this.followerRequest) {
-            this.followerRequest = new FollowerRequest(this.loginService.getUserId(), this.batchSize);
-        }
-
-        fetch(`${this.urlBase}?query_id=${this.queryId}&variables=${JSON.stringify(this.followerRequest)}`, {
-            method: 'GET',
-            headers: {
-                'Accept-Encoding': 'gzip, deflate',
-                'Accept-Language': 'en-US,en;q=0.8',
-                'Connection': 'keep-alive',
-                'Content-Length': '0',
-                'Host': 'www.instagram.com',
-                'Origin': 'https://www.instagram.com',
-                'Referer': 'https://www.instagram.com/',
-                'User-Agent': ('Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 \
-      (KHTML, like Gecko) Chrome/48.0.2564.103 Safari/537.36'),
-                'X-Instagram-AJAX': '1',
-                'X-Requested-With': 'XMLHttpRequest',
-                'X-CSRFToken': this.loginService.getCsrfToken(),
-                'cookie': `csrftoken=${this.loginService.getCsrfToken()}; sessionid=${this.loginService.getSesionId()}`
-
-            },
-        }).then(function(res) {
-            return res.json();
-        }).then(this.success)
-            .catch(err => console.error("Error occurred " + err));
+        let url = `${this.urlBase}?query_id=${this.queryId}&variables=${JSON.stringify(this.followerRequest)}`;
+        this.instaClient.call(url, 'GET', this.success, '', true);
     }
 
-
-
     success = (res: any): void => {
+
+        console.log(res);
+
         let response: FollowerResponse = res.data.user.edge_follow;
 
         for (let node of response.edges) {

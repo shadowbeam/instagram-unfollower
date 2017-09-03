@@ -1,162 +1,82 @@
-import fetch from "node-fetch";
-import formData from "form-data";
 import {LoginRequest} from "../model/login-request";
-import * as fs from 'fs';
 import * as inquirer from 'inquirer';
+import {InstaClient} from "../client/insta-client";
 
 export class LoginService {
 
     url_login: string = 'https://www.instagram.com/accounts/login/ajax/';
-    csrfToken: string = '';
-    userId: string = '';
-    sessionId: string = '';
-    userAgent = 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/48.0.2564.103 Safari/537.36';
-
-    DELIMITER: string = " - ";
-
-    loginDetails: LoginRequest;
-
+    instaClient: InstaClient;
     callback: () => void;
 
-    constructor(callback: () => void) {
+    constructor(instaClient: InstaClient, callback: () => void) {
         this.callback = callback;
-        fs.readFile('insta.tokens', this.readInstaTokens);
+        this.instaClient = instaClient;
+
+        if (instaClient.isLoggedIn()) {
+            console.log(`User already logged in - hi ${instaClient.userId}`);
+            this.callback();
+        } else {
+            this.pleaseLogin();
+        }
+
     }
 
-    readInstaTokens = (err, data): void => {
-        if (!err) {
-            console.log("Reading in csrfToken and sessionId...");
-            let lines = data.toString().split(this.DELIMITER);
-            this.userId = lines[0];
-            this.csrfToken = lines[1];
-            this.sessionId = lines[2];
-            console.log(`Found csrfToken: ${this.csrfToken}`);
-            console.log(`Found sessionId: ${this.sessionId}`);
+    private pleaseLogin(): void {
+        console.log("Please provide your Instagram authentication details:");
 
-            this.callback();
-
-        } else {
-            console.log("Please provide your Instagram authentication details:");
-
-            inquirer.prompt([
-                {
-                    type: 'username',
-                    message: 'Enter a username',
-                    name: 'username'
-                },
-                {
-                    type: 'password',
-                    message: 'Enter a masked password',
-                    name: 'password',
-                    mask: '*'
-                }
-            ]).then(this.promptCallback);
-
-
-        }
+        inquirer.prompt([
+            {
+                type: 'username',
+                message: 'Enter a username',
+                name: 'username'
+            },
+            {
+                type: 'password',
+                message: 'Enter a masked password',
+                name: 'password',
+                mask: '*'
+            }
+        ]).then(this.promptCallback);
     }
 
     promptCallback = (answers): void => {
-        console.log(answers.username + answers.password);
-        this.loginDetails = new LoginRequest(answers.username, answers.password);
-        this.makeInitialRequest();
+        this.login(answers.username, answers.password);
     }
 
-    makeInitialRequest(): void {
-        console.log("Fetching csrftoken");
-
-        fetch('https://www.instagram.com/', {
-            headers: {
-                'origin': 'https://www.instagram.com',
-                'referer': 'https://www.instagram.com/',
-                'user-Agent': this.userAgent
-            }
-        })
-            .then((res: any): void => {
-                let cookies = res.headers.getAll('set-cookie');
-                let cookiesStr = '';
-
-                for (let cookie of cookies) {
-                    if (cookie.includes("csrftoken")) {
-                        let regex: any = /csrftoken=(\w*)/;
-                        this.csrfToken = regex.exec(cookie)[1];
-                    }
-                }
-                console.log("Fetched new csrfToken: " + this.csrfToken);
-
-                this.login();
-            });
-    }
-
-    login(): void {
+    public login(username: string, password: string): void {
         console.log("Logging in...");
-
-        fetch(this.url_login, {
-            method: 'POST',
-            headers: {
-                'accept-encoding': 'gzip, deflate',
-                'accept-language': 'en-US,en;q=0.8',
-                'accept': '*/*',
-                'connection': 'keep-alive',
-                'content-type': 'application/x-www-form-urlencoded; charset=UTF-8',
-                'content-Length': '60',
-                'host': 'www.instagram.com',
-                'origin': 'https://www.instagram.com',
-                'referer': 'https://www.instagram.com/',
-                'user-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.90 Safari/537.36',
-                'x-instagram-ajax': '1',
-                'x-requested-with': 'XMLHttpRequest',
-                'x-csrftoken': this.csrfToken,
-                'cookie': 'csrftoken=' + this.csrfToken
-            },
-            body: this.loginDetails.getFormString()
-        })
-            .then(this.success)
-            .catch(err => console.error(err));
+        let loginDetails = new LoginRequest(username, password);
+        this.instaClient.call(this.url_login, 'POST', this.loginSuccess, loginDetails.getFormString());
     }
 
-    public getCsrfToken(): string {
-        return this.csrfToken;
-    }
-
-    public getSesionId(): string {
-        return this.sessionId;
-    }
-
-    public getUserId(): string {
-        return this.userId;
-    }
-
-    success = (res: any): void => {
+    loginSuccess = (res: any): void => {
 
         if (res.status == "200") {
             console.log("Login succesful");
 
             let cookies = res.headers.getAll('set-cookie');
+            let sessionId;
+            let userId;
 
             for (let cookie of cookies) {
                 if (cookie.includes("sessionid")) {
                     let regex: any = /sessionid=([^=]*);/;
-                    this.sessionId = regex.exec(cookie)[1];
+                    sessionId = regex.exec(cookie)[1];
                 } else if (cookie.includes("ds_user_id")) {
                     let regex: any = /ds_user_id=(\w*)/;
-                    this.userId = regex.exec(cookie)[1];
+                    userId = regex.exec(cookie)[1];
                 }
             }
 
-            console.log("Found new sessionId: " + this.sessionId);
-            console.log("Found new userId: " + this.userId);
+            console.log("Found new sessionId: " + sessionId);
+            console.log("Found new userId: " + userId);
 
-            fs.writeFile('insta.tokens', this.userId + this.DELIMITER + this.csrfToken + this.DELIMITER + this.sessionId, function(err) {
-                if (err) {
-                    console.log("Could not write to disk. Check folder permissions");
-                    return console.error(err);
-                }
-                console.log("Stored tokens");
-            });
-
+            this.instaClient.saveSessionAndUserIds(sessionId, userId);
+            this.callback();
         } else {
-            console.log("Unsuccesful login: " + res.status)
+            console.log("Unsuccesful login: " + res.status);
+            console.log("Unsuccesful login: " + res.statusText);
+            console.log("Unsuccesful login: " + res);
         }
 
     }
