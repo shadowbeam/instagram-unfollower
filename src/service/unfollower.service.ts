@@ -2,18 +2,17 @@ import * as fs from 'fs';
 import * as LineByLineReader from 'line-by-line';
 import {Following} from "../model/following";
 import {Goodbye} from "./goodbye.service";
-import {LoginService} from "./login.service";
-import fetch from "node-fetch";
+import {InstaClient} from "../client/insta-client";
 
 export class Unfollower {
 
     rl;
     goodbyes;
-    loginService;
+    instaClient;
 
-    constructor(loginService: LoginService) {
+    constructor(instaClient: InstaClient) {
         this.goodbyes = new Goodbye();
-        this.loginService = loginService;
+        this.instaClient = instaClient;
     }
 
     unfollow(): void {
@@ -46,26 +45,8 @@ export class Unfollower {
     private unfollowUser(following: Following): void {
         console.log(`${this.goodbyes.getGoodbyePhrase()} ${following.username}`);
 
-        fetch(`https://www.instagram.com/web/friendships/${following.id}/unfollow/`, {
-            method: 'POST',
-            headers: {
-                'Accept-Encoding': 'gzip, deflate',
-                'Accept-Language': 'en-US,en;q=0.8',
-                'Connection': 'keep-alive',
-                'Content-Length': '0',
-                'Origin': 'https://www.instagram.com',
-                'Referer': 'https://www.instagram.com/',
-                'User-Agent': ('Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/48.0.2564.103 Safari/537.36'),
-                'X-Instagram-AJAX': '1',
-                'X-Requested-With': 'XMLHttpRequest',
-                'X-CSRFToken': this.loginService.getCsrfToken(),
-                'cookie': `csrftoken=${this.loginService.getCsrfToken()}; sessionid=${this.loginService.getSesionId()}`
-
-            },
-        }).then(function(res) {
-            return res.json();
-        }).then(this.success)
-            .catch(err => console.error("Error occurred " + err));
+        let url = `https://www.instagram.com/web/friendships/${following.id}/unfollow/`;
+        this.instaClient.call(url, 'POST', this.success, '', true);
     }
 
     private success(res: any) {

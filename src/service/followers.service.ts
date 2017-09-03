@@ -99,7 +99,7 @@ export class Followers {
                 this.logger.write(',\n');
             }
         }
-        this.logger.write(']');
+        this.logger.write('\n]');
         console.log(`${this.following.length} followers written to followers.txt`)
         console.log('\x1b[35m', 'Please remove the lines from followers.txt that you do not want to unfollow before continuing...');
 
