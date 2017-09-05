@@ -36,7 +36,7 @@ export class Goodbye {
         'bye bye butterfly',
         'see ya soon raccoon',
         'give a hug lady bug',
-        'bye felica',
+        'bye felicia',
         'you broke my heart',
         'i\'m over you',
         'you\'re not good enough for me',

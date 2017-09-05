@@ -116,15 +116,24 @@ export class InstaClient {
             headers: this.headers,
             body: body
         }).then(function(res) {
-            if (unwrap) {
-                return res.json();
+            if (res.status == 200) {
+                if (unwrap) {
+                    return res.json();
+                } else {
+                    callback(res);
+                }
             } else {
+                console.log(res.status);
+                console.log(res.statusText);
                 callback(res);
             }
+
         }).then(function(json) {
             callback(json);
         })
-            .catch(err => console.error("Error occurred " + err));
+            .catch(err => {
+                console.error("Error occurred " + err)
+            });
     }
 
 }

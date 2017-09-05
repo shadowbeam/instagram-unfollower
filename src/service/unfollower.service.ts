@@ -9,6 +9,7 @@ export class Unfollower {
     rl;
     goodbyes;
     instaClient;
+    targetedUser: Following;
 
     constructor(instaClient: InstaClient) {
         this.goodbyes = new Goodbye();
@@ -27,13 +28,13 @@ export class Unfollower {
             this.rl.pause();
             try {
                 let parsed = line.replace(/,$/, "");
-                this.unfollowUser(JSON.parse(parsed));
+                this.targetedUser = JSON.parse(parsed);
+                this.unfollowUser();
             } catch (e) {
                 console.error("Could not parse the following line: " + line);
                 console.error(e);
+                this.rl.resume();
             }
-
-            setTimeout(this.wait, 1000); //wait 23 seconds
         }
 
     }
@@ -42,18 +43,19 @@ export class Unfollower {
         this.rl.resume();
     }
 
-    private unfollowUser(following: Following): void {
-        console.log(`${this.goodbyes.getGoodbyePhrase()} ${following.username}`);
-
-        let url = `https://www.instagram.com/web/friendships/${following.id}/unfollow/`;
+    unfollowUser = (): void => {
+        let url = `https://www.instagram.com/web/friendships/${this.targetedUser.id}/unfollow/`;
         this.instaClient.call(url, 'POST', this.success, '', true);
     }
 
-    private success(res: any) {
+    success = (res: any) => {
         if (res.status === "ok") {
-
+            console.log(`${this.goodbyes.getGoodbyePhrase()} ${this.targetedUser.username}`);
+            setTimeout(this.wait, 30000); //wait 23 seconds
         } else {
-            console.error("Could not unfollow : " + JSON.stringify(res));
+            console.error("Could not unfollow : " + this.targetedUser.username + " retrying in 60 seconds");
+            setTimeout(this.unfollowUser, 60000); //wait 30 seconds
+
         }
     }
 }

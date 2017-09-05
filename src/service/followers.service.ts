@@ -1,4 +1,3 @@
-import fetch from "node-fetch";
 import {FollowerRequest} from "../model/follower-request";
 import {FollowerResponse, Node} from "../model/follower-response";
 import {Following} from "../model/following";
@@ -68,8 +67,6 @@ export class Followers {
     }
 
     success = (res: any): void => {
-
-        console.log(res);
 
         let response: FollowerResponse = res.data.user.edge_follow;
 
