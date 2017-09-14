@@ -9,7 +9,7 @@ export class Unfollower {
     rl;
     goodbyes;
     instaClient;
-    retryCount: number = 0;
+    retryCount: number = 1;
     targetedUser: Following;
 
     constructor(instaClient: InstaClient) {
@@ -53,11 +53,11 @@ export class Unfollower {
         if (res.status === "ok") {
             console.log(`${this.goodbyes.getGoodbyePhrase()} ${this.targetedUser.username}`);
             setTimeout(this.wait, 60000); //wait 60 seconds
-            this.retryCount = 0;
+            this.retryCount = 1;
         } else {
-            this.retryCount = this.retryCount++;
-            console.error(`Could not unfollow : ${this.targetedUser.username} retrying in ${this.retryCount} 60 seconds`);
-            setTimeout(this.unfollowUser, this.retryCount * 60000); //wait retry time
+            console.error(`Could not unfollow ${this.targetedUser.username} - retrying in ${this.retryCount} minutes`);
+            setTimeout(this.unfollowUser, (this.retryCount * 60000)); //wait retry time
+            this.retryCount = this.retryCount * this.retryCount;
 
         }
     }
