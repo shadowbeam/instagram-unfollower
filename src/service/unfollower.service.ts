@@ -57,8 +57,7 @@ export class Unfollower {
         } else {
             console.error(`Could not unfollow ${this.targetedUser.username} - retrying in ${this.retryCount} minutes`);
             setTimeout(this.unfollowUser, (this.retryCount * 60000)); //wait retry time
-            this.retryCount = this.retryCount * this.retryCount;
-
+            this.retryCount = this.retryCount * 2;
         }
     }
 }
